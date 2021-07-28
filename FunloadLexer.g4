@@ -6,23 +6,23 @@ AND
 AS
    : A S
    ;
+AT
+   : A T
+   ;
 PLUS
    : '+'
    ;
-MINUS
-   : '-'
-   ;
 CONTINUATION
    : '-' LINE_NUMBER
+   ;
+MINUS
+   : '-'
    ;
 DSN
    : D S N
    ;
 DOUBLE_SLASH
    : '//'
-   ;
-EACH
-   : E A C H
    ;
 ENDFOR
    : E N D' 'F O R
@@ -39,11 +39,23 @@ EXISTS
 EQUALS
    : '='
    ;
-FOR
-   : F O R
+FOREACHRECORD
+   : F O R' 'E A C H' 'R E C O R D
+   ;
+GE
+   : '>='
+   ;
+GT
+   : '>'
    ;
 IF
    : I F
+   ;
+LE
+   : '<='
+   ;
+LT
+   : '<'
    ;
 LOGOUT
    : L O G O U T
@@ -63,8 +75,8 @@ OUTPUT
 PUT
    : P U T
    ;
-RECORD
-   : R E C O R D
+REPORT
+   : R E P O R T
    ;
 SELECT
    : S E L E C T
@@ -95,6 +107,9 @@ PERCENT
    ;
 POUND
    : '#'
+   ;
+WITH
+   : W I T H
    ;
 JCLCOMMAND
    : '//SYS' UPPERCASE+
