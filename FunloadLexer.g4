@@ -12,9 +12,6 @@ AT
 PLUS
    : '+'
    ;
-CONTINUATION
-   : '-' LINE_NUMBER
-   ;
 MINUS
    : '-'
    ;
@@ -125,6 +122,9 @@ IDENTIFIER
    | ('A' .. 'Z' | '0' .. '9') ('A' .. 'Z' ) ('A' .. 'Z' | '0' .. '9' | '.')*
    ;
 WHITESPACE:         [ \t\r\n]+    -> skip;
+EOL
+   : '\r\n'
+   ;
 COMMENT:            '//*' ~[\r\n]* -> channel(HIDDEN);
 LINE_NUMBER: 
    DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT

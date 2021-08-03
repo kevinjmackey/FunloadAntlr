@@ -10,17 +10,18 @@ statements
     ;
 statement
     : jcl_statement
-    | open_satatement
+    | open_statement
     | assignment_statement
     | report_statement
     | funload_statement
+    | logout_statement
     ;
 jcl_statement
     : JCLCOMMAND params
     | IDENTIFIER IDENTIFIER+
     | IDENTIFIER jcl_expression
     ;
-open_satatement
+open_statement
     : OPEN m204_file=IDENTIFIER
     ;
 report_statement
@@ -37,9 +38,13 @@ dml_statement
     | output_statement
     | select_statement
     | if_statement
+    | skip_statement
     ;
 if_statement
-    : IF (complex_conditional_expression | multi_line_conditional) dml_statement+ ENDIF
+    : IF (complex_conditional_expression) dml_statement+ endif_clause
+    ;
+endif_clause
+    : ENDIF LINE_NUMBER
     ;
 put_statement
     : PUT column=IDENTIFIER format_spec? LINE_NUMBER
@@ -51,7 +56,7 @@ output_statement
     : OUTPUT LINE_NUMBER
     ;
 select_statement
-    : select_clause when_clause+ otherwise_clause?
+    : select_clause when_clause+ otherwise_clause? end_select_clause
     ;
 select_clause
     : SELECT column=IDENTIFIER LINE_NUMBER
@@ -65,6 +70,12 @@ otherwise_clause
 end_select_clause
     : ENDSELECT LINE_NUMBER
     ;
+skip_statement
+    : SKIPKeyword LINE_NUMBER
+    ;
+logout_statement
+    : LOGOUT
+    ;
 params
     : (param COMMA? LINE_NUMBER?)+
     ;
@@ -74,7 +85,6 @@ param
     | DOUBLE_SLASH? dsn_expression
     | DOUBLE_SLASH? jcl_expression
     | DOUBLE_SLASH? args
-    | DOUBLE_SLASH? ANY
     ;
 dsn_expression
     : DSN EQUALS output_file=IDENTIFIER
@@ -98,7 +108,7 @@ jcl_expression
     | IDENTIFIER EQUALS args
     ;
 assignment_statement
-    : variable EQUALS IDENTIFIER
+    : variable EQUALS identifier
     | variable EQUALS integer_value
     | variable EQUALS function
     ;
@@ -108,17 +118,15 @@ variable
 function
     : POUND IDENTIFIER args
     ;
-multi_line_conditional
-    : LPAREN? conditional_expression ((AND | OR) conditional_expression)* (AND | OR) CONTINUATION 
-      complex_conditional_expression RPAREN?
-    ;
 complex_conditional_expression
-    : conditional_expression ((AND | OR) conditional_expression)* LINE_NUMBER
+    : conditional_expression (conjunction conditional_expression)* LINE_NUMBER
+    | conditional_expression (conjunction conditional_expression)* conjunction continuation 
+      complex_conditional_expression
     ;
 conditional_expression
-    : IDENTIFIER conditional_operator constant
-    | IDENTIFIER conditional_operator variable
-    | IDENTIFIER EXISTS
+    : LPAREN? identifier conditional_operator constant RPAREN?
+    | LPAREN? identifier conditional_operator variable RPAREN?
+    | LPAREN? identifier conditional_operator RPAREN?
     ;
 conditional_operator
     : EQUALS
@@ -126,6 +134,13 @@ conditional_operator
     | GT
     | LE
     | LT
+    | EXISTS
+    ;
+continuation
+    : MINUS LINE_NUMBER
+    ;
+conjunction
+    : (AND | OR)
     ;
 integer_value
     : INTEGER
@@ -135,6 +150,9 @@ constant
     : STRING_LITERAL // string, datetime or uniqueidentifier
     | integer_value
     ;
+identifier
+    : IDENTIFIER
+    ;
 signed_int
-    : (PLUS | MINUS)? INTEGER
+    : (PLUS | MINUS) INTEGER
     ;
