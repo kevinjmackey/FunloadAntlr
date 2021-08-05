@@ -21,6 +21,12 @@ DSN
 DOUBLE_SLASH
    : '//'
    ;
+ELSE
+   : E L S E
+   ;
+ELSEIF
+   : E L S E I F
+   ;
 ENDFOR
    : E N D' 'F O R
    ;
@@ -30,6 +36,12 @@ ENDIF
 ENDSELECT
    : E N D' 'S E L E C T
    ;
+END
+   : E N D
+   ;
+ERRORTRUNCNOREPORT
+   : E R R O R T R U N C N O R E P O R T
+   ;
 EXISTS
    : E X I S T S
    ;
@@ -38,6 +50,12 @@ EQUALS
    ;
 FOREACHRECORD
    : F O R' 'E A C H' 'R E C O R D
+   ;
+FOR
+   : F O R
+   ;
+FROM
+   : F R O M
    ;
 GE
    : '>='
@@ -54,8 +72,14 @@ LE
 LT
    : '<'
    ;
+JOB
+   : J O B
+   ;
 LOGOUT
    : L O G O U T
+   ;
+MISSING
+   : M I S S I N G
    ;
 OPEN
    : O P E N
@@ -72,6 +96,9 @@ OUTPUT
 PUT
    : P U T
    ;
+READY
+   : R E A D Y
+   ;
 REPORT
    : R E P O R T
    ;
@@ -81,11 +108,23 @@ SELECT
 SKIPKeyword
    : S K I P
    ;
+STEP
+   : S T E P
+   ;
 STRING
    : S T R I N G
    ;
+THEN
+   : T H E N
+   ;
+TO
+   : T O
+   ;
 WHEN
    : W H E N
+   ;
+XOR
+   : '^='
    ;
 ASTERISK
    : '*'
@@ -99,6 +138,9 @@ LPAREN
 RPAREN
    : ')'
    ;
+PACKED
+   : P A C K E D
+   ;
 PERCENT
    : '%'
    ;
@@ -107,6 +149,9 @@ POUND
    ;
 WITH
    : W I T H
+   ;
+ZONED
+   : Z O N E D
    ;
 JCLCOMMAND
    : '//SYS' UPPERCASE+
@@ -125,7 +170,10 @@ WHITESPACE:         [ \t\r\n]+    -> skip;
 EOL
    : '\r\n'
    ;
-COMMENT:            '//*' ~[\r\n]* -> channel(HIDDEN);
+COMMENT_SSSTAR
+   : '//*' ~[\r\n]* -> channel(HIDDEN);
+COMMENT_STAR
+   : '*' ~[\r\n]* -> channel(HIDDEN);
 LINE_NUMBER: 
    DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT
    ;

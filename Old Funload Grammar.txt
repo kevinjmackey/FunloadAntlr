@@ -3,24 +3,18 @@ parser grammar FunloadParser;
 options { tokenVocab=FunloadLexer;}
 
 funload_file
-    : job_blocks EOF
+    : statements EOF
     ;
-job_blocks
-    : job_block+
-    ;
-job_block
-    : job_statement (statement LINE_NUMBER?)+
+statements
+    : (statement LINE_NUMBER?)+
     ;
 statement
-    : jcl_statement LINE_NUMBER?
-    | open_statement LINE_NUMBER?
-    | assignment_statement LINE_NUMBER?
-    | report_statement LINE_NUMBER?
-    | funload_statement LINE_NUMBER?
-    | logout_statement LINE_NUMBER?
-    ;
-job_statement
-    : JOB EQUALS jobname=identifier STEP EQUALS stepname=identifier
+    : jcl_statement
+    | open_statement
+    | assignment_statement
+    | report_statement
+    | funload_statement
+    | logout_statement
     ;
 jcl_statement
     : JCLCOMMAND params
@@ -28,20 +22,16 @@ jcl_statement
     | IDENTIFIER jcl_expression
     ;
 open_statement
-    : OPEN identifier open_file_list?
-    ;
-open_file_list
-    : (COMMA identifier)+
-    | (COMMA identifier)+ COMMA continuation identifier open_file_list
+    : OPEN m204_file=IDENTIFIER
     ;
 report_statement
     : REPORT STRING_LITERAL WITH variable
     ;
 funload_statement
-    : foreach_statement
+    : for_statement
     ;
-foreach_statement
-    : FOREACHRECORD LINE_NUMBER? dml_statement+ ENDFOR
+for_statement
+    : FOREACHRECORD LINE_NUMBER dml_statement+ ENDFOR LINE_NUMBER
     ;
 dml_statement
     : put_statement+
@@ -51,47 +41,37 @@ dml_statement
     | skip_statement
     ;
 if_statement
-    : IF (complex_conditional_expression) THEN? dml_statement+ (ELSE dml_statement+)? 
-        (ELSEIF complex_conditional_expression)? endif_clause
+    : IF (complex_conditional_expression) dml_statement+ endif_clause
     ;
 endif_clause
-    : ENDIF LINE_NUMBER?
-    ;
-for_statement
-    : FOR identifier FROM integer_value TO identifier LPAREN POUND RPAREN dml_statement+
+    : ENDIF LINE_NUMBER
     ;
 put_statement
-    : PUT (column_name | variable | identifier) format_spec? LINE_NUMBER?
+    : PUT column=IDENTIFIER format_spec? LINE_NUMBER
     ;
 format_spec
-    : AT location=integer_value AS datatype=(STRING | PACKED | ZONED) LPAREN length=integer_value RPAREN
-    ;
-column_name
-    : identifier occurs?
-    ;
-occurs
-    : LPAREN integer_value RPAREN
+    : AT location=INTEGER AS STRING LPAREN length=INTEGER RPAREN
     ;
 output_statement
-    : OUTPUT LINE_NUMBER?
+    : OUTPUT LINE_NUMBER
     ;
 select_statement
     : select_clause when_clause+ otherwise_clause? end_select_clause
     ;
 select_clause
-    : SELECT column=IDENTIFIER LINE_NUMBER?
+    : SELECT column=IDENTIFIER LINE_NUMBER
     ;
 when_clause
-    : WHEN constant LINE_NUMBER? dml_statement+
+    : WHEN constant LINE_NUMBER dml_statement+
     ;
 otherwise_clause
-    : OTHERWISE LINE_NUMBER? dml_statement+
+    : OTHERWISE LINE_NUMBER dml_statement+
     ;
 end_select_clause
-    : ENDSELECT LINE_NUMBER?
+    : ENDSELECT LINE_NUMBER
     ;
 skip_statement
-    : SKIPKeyword LINE_NUMBER?
+    : SKIPKeyword LINE_NUMBER
     ;
 logout_statement
     : LOGOUT
@@ -118,13 +98,8 @@ argument
     | args
     ;
 args
-    : LPAREN argument argument_list? RPAREN
+    : LPAREN (argument) (COMMA argument)* RPAREN
     ;
-argument_list
-    : (COMMA argument)+
-    | (COMMA argument)+ COMMA continuation argument argument_list
-    ;
-
 jcl_expression
     : IDENTIFIER EQUALS IDENTIFIER
     | IDENTIFIER EQUALS STRING_LITERAL
@@ -144,7 +119,7 @@ function
     : POUND IDENTIFIER args
     ;
 complex_conditional_expression
-    : conditional_expression (conjunction conditional_expression)* LINE_NUMBER?
+    : conditional_expression (conjunction conditional_expression)* LINE_NUMBER
     | conditional_expression (conjunction conditional_expression)* conjunction continuation 
       complex_conditional_expression
     ;
@@ -162,7 +137,7 @@ conditional_operator
     | EXISTS
     ;
 continuation
-    : MINUS LINE_NUMBER?
+    : MINUS LINE_NUMBER? EOL
     ;
 conjunction
     : (AND | OR)
