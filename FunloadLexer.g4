@@ -15,6 +15,9 @@ PLUS
 MINUS
    : '-'
    ;
+DEFAULT
+   : D E F A U L T
+   ;
 DSN
    : D S N
    ;
@@ -40,7 +43,7 @@ END
    : E N D
    ;
 ERRORTRUNCNOREPORT
-   : E R R O R T R U N C N O R E P O R T
+   : E R R O R' 'T R U N C' 'N O R E P O R T
    ;
 EXISTS
    : E X I S T S
@@ -72,6 +75,9 @@ LE
 LT
    : '<'
    ;
+NE
+   : N E
+   ;
 JOB
    : J O B
    ;
@@ -93,11 +99,17 @@ OTHERWISE
 OUTPUT
    : O U T P U T
    ;
+OUT
+   : O U T
+   ;
 PUT
    : P U T
    ;
 READY
    : R E A D Y
+   ;
+RECIN
+   : '#'R E C I N
    ;
 REPORT
    : R E P O R T
@@ -107,6 +119,9 @@ SELECT
    ;
 SKIPKeyword
    : S K I P
+   ;
+SPECIALFUNLOADSTATEMENTS
+   : S P E C I A L' 'F U N L O A D' 'S T A T E M E N T S
    ;
 STEP
    : S T E P
@@ -147,6 +162,9 @@ PERCENT
 POUND
    : '#'
    ;
+UAI
+   : U A I
+   ;
 WITH
    : W I T H
    ;
@@ -172,6 +190,8 @@ EOL
    ;
 COMMENT_SSSTAR
    : '//*' ~[\r\n]* -> channel(HIDDEN);
+COMMENT_SSTAR
+   : '/*' ~[\r\n]* -> channel(HIDDEN);
 COMMENT_STAR
    : '*' ~[\r\n]* -> channel(HIDDEN);
 LINE_NUMBER: 
