@@ -26,6 +26,7 @@ statement
     | if_statement
     | skip_statement
     | special_funload_statements
+    | for_statement
     ;
 job_statement
     : JOB EQUALS jobname=identifier STEP EQUALS stepname=identifier
@@ -36,7 +37,7 @@ jcl_statement
     | IDENTIFIER jcl_expression
     ;
 open_statement
-    : OPEN identifier open_file_list?
+    : OPEN FILE? identifier open_file_list?
     ;
 open_file_list
     : (COMMA identifier)+
@@ -65,7 +66,8 @@ endif_clause
     : ENDIF LINE_NUMBER?
     ;
 for_statement
-    : FOR identifier FROM integer_value TO identifier LPAREN POUND RPAREN statement+
+    : FOR index=identifier FROM integer_value TO column_name statement+ ENDFOR
+    | FOR index=identifier FROM integer_value TO integer_value statement+ ENDFOR
     ;
 put_statement
     : to_output_clause? PUT (column_name | variable | identifier | constant | recin) put_clauses
@@ -87,7 +89,7 @@ format_spec
     : AS datatype=(STRING | PACKED | ZONED) args
     ;
 missing_default_clause
-    : MISSING constant
+    : MISSING missing_value=constant
     ;
 error_clause
     : ERRORTRUNCNOREPORT
@@ -97,6 +99,8 @@ column_name
     ;
 occurs
     : LPAREN integer_value RPAREN
+    | LPAREN identifier RPAREN
+    | LPAREN POUND RPAREN
     ;
 output_statement
     : to_output_clause? OUTPUT LINE_NUMBER?
@@ -172,14 +176,19 @@ jcl_expression
     ;
 assignment_statement
     : variable EQUALS identifier
-    | variable EQUALS integer_value
+    | variable EQUALS constant
     | variable EQUALS function
+    | variable EQUALS expression
     ;
 variable
     : PERCENT IDENTIFIER
     ;
 recin
     : RECIN
+    ;
+expression
+    : lhs=variable operator=MINUS rhs=INTEGER
+    | lhs=variable operator=PLUS rhs=INTEGER
     ;
 function
     : POUND IDENTIFIER args
@@ -188,11 +197,13 @@ complex_conditional_expression
     : conditional_expression (conjunction conditional_expression)* LINE_NUMBER?
     | conditional_expression (conjunction conditional_expression)* conjunction continuation 
       complex_conditional_expression
+    | conditional_expression (conjunction conditional_expression)* continuation conjunction
+      complex_conditional_expression
     ;
 conditional_expression
-    : LPAREN? column_name conditional_operator constant RPAREN?
-    | LPAREN? column_name conditional_operator variable RPAREN?
-    | LPAREN? column_name conditional_operator RPAREN?
+    : LPAREN? lhs=column_name operator=conditional_operator rhsc=constant RPAREN?
+    | LPAREN? lhs=column_name operator=conditional_operator rhsv=variable RPAREN?
+    | LPAREN? lhs=column_name operator=conditional_operator RPAREN?
     ;
 conditional_operator
     : EQUALS
@@ -201,7 +212,6 @@ conditional_operator
     | LE
     | LT
     | NE
-    | XOR
     | EXISTS
     | MISSING
     ;
@@ -216,7 +226,8 @@ integer_value
     | signed_int
     ;
 constant
-    : STRING_LITERAL // string, datetime or uniqueidentifier
+    : EMPTY_STRING
+    | STRING_LITERAL // string, datetime or uniqueidentifier
     | integer_value
     ;
 identifier

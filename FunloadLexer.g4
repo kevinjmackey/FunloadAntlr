@@ -39,9 +39,6 @@ ENDIF
 ENDSELECT
    : E N D' 'S E L E C T
    ;
-END
-   : E N D
-   ;
 ERRORTRUNCNOREPORT
    : E R R O R' 'T R U N C' 'N O R E P O R T
    ;
@@ -50,6 +47,10 @@ EXISTS
    ;
 EQUALS
    : '='
+   | E Q
+   ;
+FILE
+   : F I L E
    ;
 FOREACHRECORD
    : F O R' 'E A C H' 'R E C O R D
@@ -77,6 +78,7 @@ LT
    ;
 NE
    : N E
+   | '^='
    ;
 JOB
    : J O B
@@ -138,9 +140,6 @@ TO
 WHEN
    : W H E N
    ;
-XOR
-   : '^='
-   ;
 ASTERISK
    : '*'
    ;
@@ -177,12 +176,17 @@ JCLCOMMAND
    | '//GET' UPPERCASE+
    | '//' UPPERCASE+
    ;
+EMPTY_STRING
+   : '\'''\'''\'''\''
+   ;
 STRING_LITERAL
    : '\'' (~['\\\r\n] | ESCAPE_SEQUENCE)* '\''
    ;
+INTEGER
+   : DEC_DIGIT+
+   ;
 IDENTIFIER
-   : ('A' .. 'Z' ) ('A' .. 'Z' | '0' .. '9' | '.')*
-   | ('A' .. 'Z' | '0' .. '9') ('A' .. 'Z' ) ('A' .. 'Z' | '0' .. '9' | '.')*
+   : ('A' .. 'Z' ) ('A' .. 'Z' | '0' .. '9' | '.' | '_')*
    ;
 WHITESPACE:         [ \t\r\n]+    -> skip;
 EOL
@@ -196,9 +200,6 @@ COMMENT_STAR
    : '*' ~[\r\n]* -> channel(HIDDEN);
 LINE_NUMBER: 
    DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT
-   ;
-INTEGER
-   : DEC_DIGIT+
    ;
 ANY : . ;
 
