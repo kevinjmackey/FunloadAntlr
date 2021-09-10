@@ -12,21 +12,26 @@ job_block
     : job_statement (statement LINE_NUMBER?)+
     ;
 statement
-    : jcl_statement LINE_NUMBER?
+    : LINE_NUMBER
+    | jcl_statement LINE_NUMBER?
     | open_statement LINE_NUMBER?
     | assignment_statement LINE_NUMBER?
     | report_statement LINE_NUMBER?
     | funload_statement LINE_NUMBER?
     | logout_statement LINE_NUMBER?
     | out_to_statement LINE_NUMBER?
+    | print_all_information_statement
     | unload_all_information_statement
-    | put_statement
-    | output_statement
-    | select_statement
-    | if_statement
-    | skip_statement
+    | put_statement LINE_NUMBER?
+    | output_statement LINE_NUMBER?
+    | select_statement LINE_NUMBER?
+    | if_statement LINE_NUMBER?
+    | skip_statement LINE_NUMBER?
     | special_funload_statements
-    | for_statement
+    | for_statement LINE_NUMBER?
+    | sort_statement LINE_NUMBER?
+    | ready_statement LINE_NUMBER?
+    | end_statement LINE_NUMBER?
     ;
 job_statement
     : JOB EQUALS jobname=identifier STEP EQUALS stepname=identifier
@@ -41,10 +46,12 @@ open_statement
     ;
 open_file_list
     : (COMMA identifier)+
-    | (COMMA identifier)+ COMMA continuation identifier open_file_list
+    | (COMMA identifier)+ COMMA continuation identifier open_file_list?
     ;
 report_statement
-    : REPORT STRING_LITERAL WITH variable
+    : REPORT STRING_LITERAL WITH variable (WITH STRING_LITERAL WITH variable)?
+    | REPORT STRING_LITERAL AND variable (AND STRING_LITERAL AND variable)*
+    | REPORT STRING_LITERAL
     ;
 funload_statement
     : foreach_statement
@@ -53,14 +60,14 @@ foreach_statement
     : FOREACHRECORD LINE_NUMBER? statement+ ENDFOR
     ;
 if_statement
-    : IF (complex_conditional_expression) THEN? statement+ else_clause? 
-        elseif_clause? endif_clause
+    : IF (complex_conditional_expression) THEN? statement* else_clause? 
+        elseif_clause* endif_clause
     ;
 else_clause
-    : ELSE statement+
+    : ELSE statement*
     ;
 elseif_clause
-    : ELSEIF complex_conditional_expression THEN? statement+ else_clause?
+    : ELSEIF complex_conditional_expression THEN? statement+ else_clause? endif_clause?
     ;
 endif_clause
     : ENDIF LINE_NUMBER?
@@ -68,9 +75,10 @@ endif_clause
 for_statement
     : FOR index=identifier FROM integer_value TO column_name statement+ ENDFOR
     | FOR index=identifier FROM integer_value TO integer_value statement+ ENDFOR
+    | FOR index=identifier FROM integer_value TO variable statement+ ENDFOR
     ;
 put_statement
-    : to_output_clause? PUT (column_name | variable | identifier | constant | recin) put_clauses
+    : to_output_clause? PUT (column_name | variable | identifier | constant | filename | recin) continuation? put_clauses?
     ;
 put_clauses
     : put_clause+ LINE_NUMBER?
@@ -86,33 +94,48 @@ position_clause
     : AT location=integer_value
     ;
 format_spec
-    : AS datatype=(STRING | PACKED | ZONED) args
+    : AS datatype=(STRING | PACKED | ZONED | FIXED | DECIMAL) continuation? args
     ;
 missing_default_clause
     : MISSING missing_value=constant
     ;
 error_clause
     : ERRORTRUNCNOREPORT
+    | ERROR continuation TRUNCNOREPORT
+    | ERRORTRUNC continuation NOREPORT
+    ;
+sort_statement
+    : SORT FIELDS EQUALS args (COMMA EQUALS)?
+    | SORT FIELDS EQUALS args SUM FIELDS EQUALS NONE
+    | SORT RECORD TYPEEQUALS SORT_TYPE COMMA LENGTH EQUALS args
     ;
 column_name
-    : identifier occurs?
+    : identifier WHITESPACE? occurs?
     ;
 occurs
     : LPAREN integer_value RPAREN
     | LPAREN identifier RPAREN
     | LPAREN POUND RPAREN
+    | LPAREN ASTERISK RPAREN
     ;
 output_statement
     : to_output_clause? OUTPUT LINE_NUMBER?
+    ;
+ready_statement
+    : READY
+    ;
+end_statement
+    : END
     ;
 select_statement
     : select_clause when_clause+ otherwise_clause? end_select_clause
     ;
 select_clause
-    : SELECT column=IDENTIFIER LINE_NUMBER?
+    : SELECT (column_name | variable) LINE_NUMBER?
     ;
 when_clause
-    : WHEN constant LINE_NUMBER? statement+
+    : WHEN constant (COMMA constant)* LINE_NUMBER? statement+
+    | WHEN constant (COMMA constant)* (COMMA continuation)? constant (COMMA constant)* statement+
     ;
 otherwise_clause
     : OTHERWISE LINE_NUMBER? statement+
@@ -126,6 +149,9 @@ skip_statement
 logout_statement
     : LOGOUT
     ;
+print_all_information_statement
+    : PAI LINE_NUMBER?
+    ;
 unload_all_information_statement
     : UAI LINE_NUMBER?
     ;
@@ -137,6 +163,26 @@ out_to_statement
     ;
 to_output_clause
     : TO identifier
+    ;
+argument
+    : integer_value
+    | variable
+    | column_name
+    | IDENTIFIER
+    | STRING_LITERAL
+    | identifier STRING_LITERAL
+    | filename
+    | function
+    | jcl_expression
+    | args
+    ;
+args
+    : LPAREN argument? argument_list? RPAREN
+    ;
+argument_list
+    : (COMMA argument?)* COMMA continuation argument_list+
+    | argument (COMMA argument_list)?
+    | (COMMA argument?)+
     ;
 params
     : (param COMMA? LINE_NUMBER?)+
@@ -151,22 +197,6 @@ param
 dsn_expression
     : DSN EQUALS output_file=IDENTIFIER
     ;
-argument
-    : integer_value
-    | IDENTIFIER
-    | STRING_LITERAL
-    | jcl_expression
-    | variable
-    | args
-    ;
-args
-    : LPAREN argument argument_list? RPAREN
-    ;
-argument_list
-    : (COMMA argument)+
-    | (COMMA argument)+ COMMA continuation argument argument_list
-    ;
-
 jcl_expression
     : IDENTIFIER EQUALS IDENTIFIER
     | IDENTIFIER EQUALS STRING_LITERAL
@@ -175,23 +205,30 @@ jcl_expression
     | IDENTIFIER EQUALS args
     ;
 assignment_statement
-    : variable EQUALS identifier
-    | variable EQUALS constant
-    | variable EQUALS function
-    | variable EQUALS expression
+    : variable EQUALS continuation? identifier
+    | variable EQUALS continuation? constant
+    | variable EQUALS continuation? function
+    | variable EQUALS continuation? variable
+    | variable EQUALS continuation? expression
+    | variable EQUALS continuation? column_name
     ;
 variable
     : PERCENT IDENTIFIER
+    ;
+filename
+    : FILENAME
     ;
 recin
     : RECIN
     ;
 expression
-    : lhs=variable operator=MINUS rhs=INTEGER
-    | lhs=variable operator=PLUS rhs=INTEGER
+    : variable (PLUS | MINUS) INTEGER ((PLUS | MINUS) INTEGER)?
+    | variable (PLUS | MINUS) INTEGER ((PLUS | MINUS) variable)?
+    | variable (PLUS | MINUS) variable ((PLUS | MINUS) INTEGER)?
+    | INTEGER (PLUS | MINUS) variable ((PLUS | MINUS) INTEGER)?
     ;
 function
-    : POUND IDENTIFIER args
+    : POUND IDENTIFIER args?
     ;
 complex_conditional_expression
     : conditional_expression (conjunction conditional_expression)* LINE_NUMBER?
@@ -201,9 +238,13 @@ complex_conditional_expression
       complex_conditional_expression
     ;
 conditional_expression
-    : LPAREN? lhs=column_name operator=conditional_operator rhsc=constant RPAREN?
-    | LPAREN? lhs=column_name operator=conditional_operator rhsv=variable RPAREN?
-    | LPAREN? lhs=column_name operator=conditional_operator RPAREN?
+    : LPAREN* lhsv=variable operator=conditional_operator rhsc=constant RPAREN*
+    | LPAREN* lhsv=variable operator=conditional_operator rhsv=variable RPAREN*
+    | LPAREN* lhs=column_name operator=conditional_operator rhscol=column_name RPAREN*
+    | LPAREN* lhs=column_name operator=conditional_operator rhsc=constant RPAREN*
+    | LPAREN* lhs=column_name operator=conditional_operator PLUS? rhsv=variable RPAREN*
+    | LPAREN* lhs=column_name operator=conditional_operator RPAREN*
+    | LPAREN* lhvs=variable operator=conditional_operator RPAREN*
     ;
 conditional_operator
     : EQUALS
@@ -214,6 +255,8 @@ conditional_operator
     | NE
     | EXISTS
     | MISSING
+    | ISFIXED
+    | ISFLOAT
     ;
 continuation
     : MINUS LINE_NUMBER?

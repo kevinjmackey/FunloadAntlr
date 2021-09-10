@@ -15,6 +15,9 @@ PLUS
 MINUS
    : '-'
    ;
+DECIMAL
+   : D E C I M A L
+   ;
 DEFAULT
    : D E F A U L T
    ;
@@ -37,10 +40,26 @@ ENDIF
    : E N D' 'I F
    ;
 ENDSELECT
-   : E N D' 'S E L E C T
+   : E N D WHITESPACE S E L E C T
    ;
 ERRORTRUNCNOREPORT
    : E R R O R' 'T R U N C' 'N O R E P O R T
+   ;
+END
+   : E N D
+   ;
+ERRORTRUNC
+   : E R R O R WHITESPACE T R U N C
+   ;
+NOREPORT
+   : N O R E P O R T
+   ;
+ERROR
+   : E R R O R
+   ;
+TRUNCNOREPORT
+   : T R U N C'  'N O R E P O R T
+   | T R U N C' 'N O R E P O R T
    ;
 EXISTS
    : E X I S T S
@@ -48,9 +67,19 @@ EXISTS
 EQUALS
    : '='
    | E Q
+   | E Q U A L S
+   ;
+FIELDS
+   : F I E L D S
    ;
 FILE
    : F I L E
+   ;
+FILENAME
+   : '#'F I L E N A M E
+   ;
+FIXED
+   : F I X E D
    ;
 FOREACHRECORD
    : F O R' 'E A C H' 'R E C O R D
@@ -63,31 +92,47 @@ FROM
    ;
 GE
    : '>='
+   | G E
    ;
 GT
    : '>'
+   | G T
    ;
 IF
    : I F
    ;
 LE
    : '<='
+   | L E
    ;
 LT
    : '<'
+   | L T
    ;
 NE
    : N E
    | '^='
    ;
+ISFIXED
+   : I S' 'F I X E D
+   ;
+ISFLOAT
+   : I S' 'F L O A T
+   ;
 JOB
    : J O B
+   ;
+LENGTH
+   : L E N G T H
    ;
 LOGOUT
    : L O G O U T
    ;
 MISSING
    : M I S S I N G
+   ;
+NONE
+   : N O N E
    ;
 OPEN
    : O P E N
@@ -113,6 +158,9 @@ READY
 RECIN
    : '#'R E C I N
    ;
+RECORD
+   : R E C O R D
+   ;
 REPORT
    : R E P O R T
    ;
@@ -121,6 +169,12 @@ SELECT
    ;
 SKIPKeyword
    : S K I P
+   ;
+SORT
+   : S O R T
+   ;
+SORT_TYPE
+   : F
    ;
 SPECIALFUNLOADSTATEMENTS
    : S P E C I A L' 'F U N L O A D' 'S T A T E M E N T S
@@ -131,11 +185,17 @@ STEP
 STRING
    : S T R I N G
    ;
+SUM
+   : S U M
+   ;
 THEN
    : T H E N
    ;
 TO
    : T O
+   ;
+TYPEEQUALS
+   : T Y P E'='
    ;
 WHEN
    : W H E N
@@ -161,6 +221,9 @@ PERCENT
 POUND
    : '#'
    ;
+PAI
+   : P A I
+   ;
 UAI
    : U A I
    ;
@@ -180,13 +243,19 @@ EMPTY_STRING
    : '\'''\'''\'''\''
    ;
 STRING_LITERAL
-   : '\'' (~['\\\r\n] | ESCAPE_SEQUENCE)* '\''
+   : '\'' (~['\r\n] | '\'\'' | ESCAPE_SEQUENCE)* '\''
+   ;
+LINE_NUMBER: 
+   '0' DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT
    ;
 INTEGER
    : DEC_DIGIT+
    ;
 IDENTIFIER
    : ('A' .. 'Z' ) ('A' .. 'Z' | '0' .. '9' | '.' | '_')*
+   ;
+ALPHA_CHARACTER
+   : UPPERCASE
    ;
 WHITESPACE:         [ \t\r\n]+    -> skip;
 EOL
@@ -197,10 +266,11 @@ COMMENT_SSSTAR
 COMMENT_SSTAR
    : '/*' ~[\r\n]* -> channel(HIDDEN);
 COMMENT_STAR
-   : '*' ~[\r\n]* -> channel(HIDDEN);
-LINE_NUMBER: 
-   DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT DEC_DIGIT
-   ;
+   : '**' ~[\r\n]* -> channel(HIDDEN);
+COMMENT_STARPOUND
+   : '*#' ~[\r\n]* -> channel(HIDDEN);
+COMMENT_STARWHITESPACE
+   : '*' ' ' ~[\r\n]* -> channel(HIDDEN);
 ANY : . ;
 
 fragment DEC_DOT_DEC:  (DEC_DIGIT+ '.' DEC_DIGIT+ |  DEC_DIGIT+ '.' | '.' DEC_DIGIT+);
