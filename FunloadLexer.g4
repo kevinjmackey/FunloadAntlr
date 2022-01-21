@@ -34,10 +34,13 @@ ELSEIF
    : E L S E I F
    ;
 ENDFOR
-   : E N D' 'F O R
+   : E N D WHITESPACE F O R
    ;
 ENDIF
-   : E N D' 'I F
+   : E N D WHITESPACE I F
+   ;
+ENDREPEAT
+   : E N D WHITESPACE R E P E A T
    ;
 ENDSELECT
    : E N D WHITESPACE S E L E C T
@@ -122,6 +125,12 @@ ISFLOAT
 JOB
    : J O B
    ;
+LEAVEFOR
+   : L E A V E WHITESPACE F O R
+   ;
+LEAVEREPEAT
+   : L E A V E WHITESPACE R E P E A T
+   ;
 LENGTH
    : L E N G T H
    ;
@@ -163,6 +172,9 @@ RECORD
    ;
 REPORT
    : R E P O R T
+   ;
+REPEAT
+   : R E P E A T
    ;
 SELECT
    : S E L E C T
@@ -239,7 +251,7 @@ JCLCOMMAND
    | '//GET' UPPERCASE+
    | '//' UPPERCASE+
    ;
-EMPTY_STRING
+EMPTY_STRING_LITERAL
    : '\'''\'''\'''\''
    ;
 STRING_LITERAL
@@ -250,6 +262,9 @@ LINE_NUMBER:
    ;
 INTEGER
    : DEC_DIGIT+
+   ;
+FLOAT:
+   DEC_DIGIT+ '.' DEC_DIGIT+
    ;
 IDENTIFIER
    : ('A' .. 'Z' ) ('A' .. 'Z' | '0' .. '9' | '.' | '_')*

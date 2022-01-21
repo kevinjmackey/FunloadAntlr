@@ -32,6 +32,9 @@ statement
     | sort_statement LINE_NUMBER?
     | ready_statement LINE_NUMBER?
     | end_statement LINE_NUMBER?
+    | leave_for_statement LINE_NUMBER?
+    | repeat_statement LINE_NUMBER?
+    | leave_repeat_statement LINE_NUMBER?
     ;
 job_statement
     : JOB EQUALS jobname=identifier STEP EQUALS stepname=identifier
@@ -77,6 +80,12 @@ for_statement
     | FOR index=identifier FROM integer_value TO integer_value statement+ ENDFOR
     | FOR index=identifier FROM integer_value TO variable statement+ ENDFOR
     ;
+leave_for_statement
+    : LEAVEFOR
+    ;
+leave_repeat_statement
+    : LEAVEREPEAT
+    ;
 put_statement
     : to_output_clause? PUT (column_name | variable | identifier | constant | filename | recin) continuation? put_clauses?
     ;
@@ -115,6 +124,7 @@ column_name
 occurs
     : LPAREN integer_value RPAREN
     | LPAREN identifier RPAREN
+    | LPAREN variable RPAREN
     | LPAREN POUND RPAREN
     | LPAREN ASTERISK RPAREN
     ;
@@ -123,6 +133,9 @@ output_statement
     ;
 ready_statement
     : READY
+    ;
+repeat_statement
+    : REPEAT statement+ ENDREPEAT LINE_NUMBER?
     ;
 end_statement
     : END
@@ -223,6 +236,7 @@ recin
     ;
 expression
     : variable (PLUS | MINUS) INTEGER ((PLUS | MINUS) INTEGER)?
+    | variable (PLUS | MINUS) FLOAT ((PLUS | MINUS) FLOAT)?
     | variable (PLUS | MINUS) INTEGER ((PLUS | MINUS) variable)?
     | variable (PLUS | MINUS) variable ((PLUS | MINUS) INTEGER)?
     | INTEGER (PLUS | MINUS) variable ((PLUS | MINUS) INTEGER)?
@@ -269,9 +283,10 @@ integer_value
     | signed_int
     ;
 constant
-    : EMPTY_STRING
+    : EMPTY_STRING_LITERAL
     | STRING_LITERAL // string, datetime or uniqueidentifier
     | integer_value
+    | FLOAT
     ;
 identifier
     : IDENTIFIER
