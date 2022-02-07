@@ -259,6 +259,7 @@ conditional_expression
     | LPAREN* lhs=column_name operator=conditional_operator PLUS? rhsv=variable RPAREN*
     | LPAREN* lhs=column_name operator=conditional_operator RPAREN*
     | LPAREN* lhvs=variable operator=conditional_operator RPAREN*
+    | LPAREN* lhsc=constant operator=conditional_operator rhsc=constant RPAREN*
     ;
 conditional_operator
     : EQUALS
